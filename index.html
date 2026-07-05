@@ -1,9 +1,9 @@
 <!DOCTYPE html>
+
 <html>
 <head>
   <meta charset="UTF-8">
   <title>YouTube No-Cookie Player</title>
-  
   <style>
   
 body {
@@ -17,13 +17,9 @@ input {
   
 }
 </style>
-
 </head>
 <body>
-
-<!-- Added 'autofocus' to select the input automatically when the page opens -->
-<input type="text" id="url" size="40" autofocus>
-
+<input type="text" id="url" size="40">
 <br><br>
 
 <iframe id="player"
@@ -33,7 +29,6 @@ input {
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowfullscreen>
 </iframe>
-
 <script>
   function extractVideoId(url) {
     const regex = /(?:youtube\.com.*v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
@@ -41,28 +36,15 @@ input {
     return match ? match[1] : null;
   }
 
-  const inputElement = document.getElementById("url");
-
-  inputElement.addEventListener("input", function () {
+  document.getElementById("url").addEventListener("input", function () {
     const url = this.value.trim();
     const videoId = extractVideoId(url);
 
     if (videoId) {
-      // Updated the URL format to point to the youtube-nocookie embed link
-      const embedUrl = "https://www.youtube-nocookie.com/embed/" + videoId + "?autoplay=1";
+      const embedUrl = " + videoId + "?autoplay=1";
       document.getElementById("player").src = embedUrl;
     }
   });
-
-  // Captures any paste action on the page and routes it directly to the input box
-  document.addEventListener("paste", function (e) {
-    const pastedText = (e.clipboardData || window.clipboardData).getData("text");
-    inputElement.value = pastedText;
-    
-    // Trigger the input event to automatically update the iframe
-    inputElement.dispatchEvent(new Event('input'));
-  });
 </script>
-
 </body>
 </html>
