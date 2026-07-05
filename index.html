@@ -1,26 +1,32 @@
 <!DOCTYPE html>
-
 <html>
 <head>
   <meta charset="UTF-8">
   <title>YouTube No-Cookie Player</title>
-  <link type="favicon" src="/img/favicon.png">
+  <!-- Виправлено підключення іконки -->
+  <link rel="icon" type="image/png" href="/img/favicon.png">
   <style>
-  
-body {
-  background-color: #333;
-}
+    body {
+      background-color: #333;
+      font-family: sans-serif;
+      color: white;
+      padding: 20px;
+    }
 
-input {
-  background:#333;
-  border: 0.5px solid white;
-  color: white;
-  
-}
-</style>
+    input {
+      background: #333;
+      border: 1px solid white;
+      color: white;
+      padding: 8px;
+      width: 100%;
+      max-width: 620px;
+      box-sizing: border-box;
+    }
+  </style>
 </head>
 <body>
-<input type="text" id="url" size="40">
+
+<input type="text" id="url" placeholder="Вставте посилання на YouTube відео (або Shorts)...">
 <br><br>
 
 <iframe id="player"
@@ -30,6 +36,7 @@ input {
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowfullscreen>
 </iframe>
+
 <script>
   function extractVideoId(url) {
     const regex = /(?:youtube\.com.*v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
@@ -42,7 +49,8 @@ input {
     const videoId = extractVideoId(url);
 
     if (videoId) {
-      const embedUrl = " + videoId + "?autoplay=1";
+      // Додано базову адресу для безкукисного плеєра
+      const embedUrl = "https://www.youtube-nocookie.com/embed/" + videoId + "?autoplay=1";
       document.getElementById("player").src = embedUrl;
     }
   });
