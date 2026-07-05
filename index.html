@@ -45,8 +45,20 @@ input {
     const videoId = extractVideoId(url);
 
     if (videoId) {
-      const embedUrl = "https://www.youtube-nocookie.com/embed/" + videoId + "?autoplay=1";
+      const embedUrl = " + videoId + "?autoplay=1";
       document.getElementById("player").src = embedUrl;
+    }
+  });
+
+  // Automatically paste the last copied text when the input bar is clicked
+  document.getElementById("url").addEventListener("click", async function () {
+    try {
+      const text = await navigator.clipboard.readText();
+      this.value = text;
+      // Dispatch the input event to trigger the player update logic above
+      this.dispatchEvent(new Event('input'));
+    } catch (err) {
+      console.error("Failed to read clipboard: ", err);
     }
   });
 </script>
