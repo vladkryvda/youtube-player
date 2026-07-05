@@ -21,7 +21,8 @@ input {
 </head>
 <body>
 
-<input type="text" id="url" size="40">
+<!-- Added 'autofocus' to select the input automatically when the page opens -->
+<input type="text" id="url" size="40" autofocus>
 
 <br><br>
 
@@ -40,26 +41,26 @@ input {
     return match ? match[1] : null;
   }
 
-  document.getElementById("url").addEventListener("input", function () {
+  const inputElement = document.getElementById("url");
+
+  inputElement.addEventListener("input", function () {
     const url = this.value.trim();
     const videoId = extractVideoId(url);
 
     if (videoId) {
-      const embedUrl = " + videoId + "?autoplay=1";
+      // Updated the URL format to point to the youtube-nocookie embed link
+      const embedUrl = "https://www.youtube-nocookie.com/embed/" + videoId + "?autoplay=1";
       document.getElementById("player").src = embedUrl;
     }
   });
 
-  // Automatically paste the last copied text when the input bar is clicked
-  document.getElementById("url").addEventListener("click", async function () {
-    try {
-      const text = await navigator.clipboard.readText();
-      this.value = text;
-      // Dispatch the input event to trigger the player update logic above
-      this.dispatchEvent(new Event('input'));
-    } catch (err) {
-      console.error("Failed to read clipboard: ", err);
-    }
+  // Captures any paste action on the page and routes it directly to the input box
+  document.addEventListener("paste", function (e) {
+    const pastedText = (e.clipboardData || window.clipboardData).getData("text");
+    inputElement.value = pastedText;
+    
+    // Trigger the input event to automatically update the iframe
+    inputElement.dispatchEvent(new Event('input'));
   });
 </script>
 
