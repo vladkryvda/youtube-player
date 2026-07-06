@@ -7,26 +7,50 @@
   <style>
 body {
   background-color: #333;
+  padding: 20px;
 }
 
 input {
   background:#333;
   border: 0.5px solid white;
   color: white;
+  padding: 5px;
+}
+
+/* Контейнер, розмір якого можна змінювати */
+.resizable-container {
+  width: 640px;       /* Початкова ширина */
+  height: 360px;      /* Початкова висота */
+  min-width: 320px;   /* Мінімальна ширина */
+  min-height: 180px;  /* Мінімальна висота */
+  resize: both;       /* Дозволяє розтягувати по горизонталі та вертикалі */
+  overflow: hidden;   /* Необхідно для коректної роботи resize */
+  border: 1px solid #555;
+  padding-bottom: 15px; /* Зазор знизу для зручного захоплення кутика мишкою */
+  box-sizing: border-box;
+}
+
+/* Плеєр займає 100% ширини та висоти свого контейнера */
+#player {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: none;
 }
 </style>
 </head>
 <body>
-<input type="text" id="url" size="40">
+<input type="text" id="url" size="40" placeholder="Вставте посилання на YouTube">
 <br><br>
 
-<iframe id="player"
-  width="640"
-  height="360"
-  frameborder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowfullscreen>
-</iframe>
+<!-- Контейнер-обгортка для зміни розміру -->
+<div class="resizable-container">
+  <iframe id="player"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+  </iframe>
+</div>
+
 <script>
   function extractVideoId(url) {
     const regex = /(?:youtube\.com.*v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
@@ -39,7 +63,8 @@ input {
     const videoId = extractVideoId(url);
 
     if (videoId) {
-      const embedUrl = "https://www.youtube-nocookie.com/embed/" + videoId + "?autoplay=1";
+      // Формуємо правильне посилання для вбудовування плеєра
+      const embedUrl = "https://www.youtube.com/embed/" + videoId + "?autoplay=1";
       document.getElementById("player").src = embedUrl;
     }
   });
