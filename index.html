@@ -2,34 +2,46 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>—</title>
-  <link rel="icon" type="image/png" href="img/favicon.png">
+  <title>•</title>
+  <!-- Інлайн-вектор білої крапки для ультра-мінімалістичного favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2230%22 fill=%22%23ffffff%22/></svg>">
   <style>
-body {
+/* Налаштування фону на всю висоту екрана */
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
   background-color: #333;
-  padding: 20px;
 }
+
+body {
+  padding: 20px;
+  box-sizing: border-box;
+  font-family: sans-serif;
+  cursor: default;
+}
+
 input {
 background:#333;
 border: 0.5px solid white;
 color: white;
 padding: 5px;
+cursor: text;
 }
 
-/* Container with resizable dimensions */
+/* Контейнер для плеєра */
 .resizable-container {
-width: 1280px;      /* Initial width */
-height: 720px;      /* Initial height */
-min-width: 320px;   /* Minimum width */
-min-height: 180px;  /* Minimum height */
-resize: both;       /* Allows horizontal and vertical resizing */
-overflow: hidden;   /* Required for resize to work properly */
+position: relative;
+width: 1280px;      /* Початкова ширина */
+height: 720px;      /* Початкова висота */
+min-width: 320px;   /* Мінімальна ширина */
+min-height: 180px;  /* Мінімальна висота */
 border: 1px solid #555;
-padding-bottom: 15px; /* Gap at the bottom for easy mouse grab */
 box-sizing: border-box;
+overflow: hidden;   /* Запобігає виходу iframe за межі при масштабуванні */
 }
 
-/* Player occupies 100% of container width and height */
+/* Плеєр займає 100% ширини та висоти контейнера */
 #player {
 width: 100%;
 height: 100%;
@@ -45,6 +57,12 @@ bottom: 12px;
 
 a {
 color: #666;
+cursor: pointer;
+text-decoration: none;
+}
+
+a:hover {
+  color: #888;
 }
 
 </style>
@@ -52,7 +70,7 @@ color: #666;
 <body>
 <input type="text" id="url" size="40" placeholder="Insert YouTube link here">
 <br><br>
-<!-- Wrapper container for resizing -->
+<!-- Контейнер для відео -->
 <div class="resizable-container">
   <iframe id="player"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -76,11 +94,70 @@ color: #666;
     const videoId = extractVideoId(url);
 
     if (videoId) {
-      // Correct URL formatting for player embedding
+      // Форматування посилання для вбудовування плеєра
       const embedUrl = "https://www.youtube.com/embed/" + videoId + "?autoplay=1";
       document.getElementById("player").src = embedUrl;
     }
   });
+
+  // Глобальна логіка плавного відносного масштабування:
+  // Затисніть ЛКМ у будь-якому місці фону сторінки та ведіть мишу, щоб змінити розмір плеєра.
+  const container = document.querySelector('.resizable-container');
+  const player = document.getElementById('player');
+
+  let isResizing = false;
+  let startX, startY, startWidth, startHeight;
+
+  document.addEventListener('mousedown', function (e) {
+    // Ігноруємо кліки по полю вводу, посиланнях або самому плеєру
+    if (
+      e.target.tagName === 'INPUT' || 
+      e.target.tagName === 'A' || 
+      e.target.closest('#player') || 
+      e.target.closest('.links')
+    ) {
+      return;
+    }
+
+    e.preventDefault();
+    isResizing = true;
+    player.style.pointerEvents = 'none'; // Тимчасово вимикаємо кліки по відео, щоб перетягування було ідеально плавним
+
+    // Фіксуємо початкову точку кліку та поточні розміри плеєра
+    startX = e.clientX;
+    startY = e.clientY;
+    startWidth = container.offsetWidth;
+    startHeight = container.offsetHeight;
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  });
+
+  function handleMouseMove(e) {
+    if (!isResizing) return;
+
+    // Рахуємо різницю, на яку перемістився курсор відносно початкового кліку
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    // Розраховуємо новий розмір відносно початкового
+    let newWidth = startWidth + dx;
+    let newHeight = startHeight + dy;
+
+    // Застосовуємо мінімальні обмеження
+    newWidth = Math.max(320, newWidth);
+    newHeight = Math.max(180, newHeight);
+
+    container.style.width = newWidth + 'px';
+    container.style.height = newHeight + 'px';
+  }
+
+  function handleMouseUp() {
+    isResizing = false;
+    player.style.pointerEvents = 'auto'; // Відновлюємо взаємодію з відео
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  }
 </script>
 </body>
 </html>
