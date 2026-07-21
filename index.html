@@ -184,10 +184,12 @@ a:hover {
   color: #ccc;
   font-family: monospace;
   font-size: 13px;
+  visibility: hidden; /* Prevents clicks on hidden panel */
 }
 
 #log-panel.open {
   right: 0;
+  visibility: visible; /* Allows interaction only when open */
 }
 
 #log-panel h2 {
@@ -301,15 +303,45 @@ a:hover {
   let currentIntent = '';
   let appState = 'idle'; // 'idle' | 'intent' | 'playing' | 'review'
 
+  // Safe wrapper for localStorage to prevent security exceptions in private modes
+  const safeStorage = {
+    getLogs() {
+      try {
+        const data = localStorage.getItem('yt_mindful_logs');
+        const parsed = JSON.parse(data || '[]');
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        console.warn("Storage access restricted. History will not be saved permanently.");
+        return [];
+      }
+    },
+    saveLogs(logs) {
+      try {
+        localStorage.setItem('yt_mindful_logs', JSON.stringify(logs));
+      } catch (e) {
+        console.warn("Could not save to local storage:", e);
+      }
+    },
+    clearLogs() {
+      try {
+        localStorage.removeItem('yt_mindful_logs');
+      } catch (e) {
+        console.warn("Could not clear local storage:", e);
+      }
+    }
+  };
+
   function extractVideoId(url) {
+    if (!url) return null;
     const regex = /(?:youtube\.com.*v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
     const match = url.match(regex);
     return match ? match[1] : null;
   }
 
-  // Escape HTML helper for secure logging
+  // Deeply fault-tolerant HTML escaping
   function escapeHTML(str) {
-    return str.replace(/[&<>'"]/g, 
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>'"]/g, 
       tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
     );
   }
@@ -321,6 +353,8 @@ a:hover {
     const finishBtn = document.getElementById("finish-btn");
     const player = document.getElementById("player");
     const overlay = document.getElementById("form-overlay");
+
+    if (!urlInput || !finishBtn || !player || !overlay) return;
 
     if (state === 'idle') {
       urlInput.disabled = false;
@@ -351,17 +385,19 @@ a:hover {
       const cnt = document.getElementById("intent-counter");
       const btn = document.getElementById("intent-submit");
 
-      tx.focus();
-      tx.addEventListener("input", function() {
-        const len = tx.value.trim().length;
-        cnt.textContent = `${len} / ${MIN_CHARS} characters`;
-        btn.disabled = len < MIN_CHARS;
-      });
+      if (tx && cnt && btn) {
+        tx.focus();
+        tx.addEventListener("input", function() {
+          const len = tx.value.trim().length;
+          cnt.textContent = `${len} / ${MIN_CHARS} characters`;
+          btn.disabled = len < MIN_CHARS;
+        });
 
-      btn.addEventListener("click", function() {
-        currentIntent = tx.value.trim();
-        setAppState('playing');
-      });
+        btn.addEventListener("click", function() {
+          currentIntent = tx.value.trim();
+          setAppState('playing');
+        });
+      }
     } 
     
     else if (state === 'playing') {
@@ -391,40 +427,52 @@ a:hover {
       const cnt = document.getElementById("review-counter");
       const btn = document.getElementById("review-submit");
 
-      tx.focus();
-      tx.addEventListener("input", function() {
-        const len = tx.value.trim().length;
-        cnt.textContent = `${len} / ${MIN_CHARS} characters`;
-        btn.disabled = len < MIN_CHARS;
-      });
+      if (tx && cnt && btn) {
+        tx.focus();
+        tx.addEventListener("input", function() {
+          const len = tx.value.trim().length;
+          cnt.textContent = `${len} / ${MIN_CHARS} characters`;
+          btn.disabled = len < MIN_CHARS;
+        });
 
-      btn.addEventListener("click", function() {
-        saveLog(currentUrl, currentIntent, tx.value.trim());
-        setAppState('idle');
-      });
+        btn.addEventListener("click", function() {
+          saveLog(currentUrl, currentIntent, tx.value.trim());
+          setAppState('idle');
+        });
+      }
     }
   }
 
-  // Handle URL Paste/Input
-  document.getElementById("url").addEventListener("input", function () {
-    const url = this.value.trim();
-    const videoId = extractVideoId(url);
+  // Handle URL Paste/Input safely with multiple events
+  const urlEl = document.getElementById("url");
+  if (urlEl) {
+    const handleUrlInput = function() {
+      const url = urlEl.value.trim();
+      const videoId = extractVideoId(url);
 
-    if (videoId) {
-      currentUrl = url;
-      currentVideoId = videoId;
-      setAppState('intent');
-    }
-  });
+      if (videoId) {
+        currentUrl = url;
+        currentVideoId = videoId;
+        setAppState('intent');
+      }
+    };
+
+    ['input', 'change'].forEach(evt => {
+      urlEl.addEventListener(evt, handleUrlInput);
+    });
+  }
 
   // Handle Finish Button click
-  document.getElementById("finish-btn").addEventListener("click", function() {
-    setAppState('review');
-  });
+  const finishBtnEl = document.getElementById("finish-btn");
+  if (finishBtnEl) {
+    finishBtnEl.addEventListener("click", function() {
+      setAppState('review');
+    });
+  }
 
   // Log Saving Mechanism
   function saveLog(url, intent, review) {
-    const logs = JSON.parse(localStorage.getItem('yt_mindful_logs') || '[]');
+    const logs = safeStorage.getLogs();
     const newEntry = {
       date: new Date().toISOString(),
       url: url,
@@ -432,14 +480,15 @@ a:hover {
       review: review
     };
     logs.push(newEntry);
-    localStorage.setItem('yt_mindful_logs', JSON.stringify(logs));
+    safeStorage.saveLogs(logs);
     renderLogs();
   }
 
-  // Log Rendering
+  // Deeply fault-tolerant Log Rendering (cannot crash on incomplete/corrupted entries)
   function renderLogs() {
-    const logs = JSON.parse(localStorage.getItem('yt_mindful_logs') || '[]');
+    const logs = safeStorage.getLogs();
     const listContainer = document.getElementById('log-list');
+    if (!listContainer) return;
     
     if (logs.length === 0) {
       listContainer.innerHTML = '<div style="color:#555; text-align:center; margin-top:40px;">Your journal is empty.</div>';
@@ -447,33 +496,158 @@ a:hover {
     }
 
     listContainer.innerHTML = logs.slice().reverse().map(entry => {
-      const dateStr = new Date(entry.date).toLocaleString('en-US', { hour12: false });
+      if (!entry || typeof entry !== 'object') return '';
+      
+      const d = entry.date ? new Date(entry.date) : null;
+      const dateStr = (d && !isNaN(d)) ? d.toLocaleString('en-US', { hour12: false }) : 'Unknown Date';
+      const urlStr = entry.url ? escapeHTML(entry.url) : '#';
+      const intentStr = entry.intent ? escapeHTML(entry.intent) : 'No objective entered';
+      const reviewStr = entry.review ? escapeHTML(entry.review) : 'No summary entered';
+
       return `
         <div class="log-entry">
           <div class="log-entry-date">${dateStr}</div>
-          <div class="log-entry-url"><a href="${entry.url}" target="_blank">${entry.url}</a></div>
+          <div class="log-entry-url"><a href="${urlStr}" target="_blank">${urlStr}</a></div>
           <div class="log-entry-q">Desired outcome:</div>
-          <div class="log-entry-a">${escapeHTML(entry.intent)}</div>
+          <div class="log-entry-a">${intentStr}</div>
           <div class="log-entry-q">Actual outcome:</div>
-          <div class="log-entry-a">${escapeHTML(entry.review)}</div>
+          <div class="log-entry-a">${reviewStr}</div>
         </div>
       `;
     }).join('');
   }
 
   // Export Journal to File
-  document.getElementById("export-btn").addEventListener("click", function() {
-    const logs = JSON.parse(localStorage.getItem('yt_mindful_logs') || '[]');
-    if (logs.length === 0) return;
+  const exportBtn = document.getElementById("export-btn");
+  if (exportBtn) {
+    exportBtn.addEventListener("click", function() {
+      const logs = safeStorage.getLogs();
+      if (logs.length === 0) return;
 
-    let text = "MINDFUL YOUTUBE JOURNAL\n=======================\n\n";
-    logs.forEach(entry => {
-      const dateStr = new Date(entry.date).toLocaleString('en-US', { hour12: false });
-      text += `Date: ${dateStr}\n`;
-      text += `URL: ${entry.url}\n`;
-      text += `Desired Outcome: ${entry.intent}\n`;
-      text += `Actual Outcome: ${entry.review}\n`;
-      text += `--------------------------------------------------\n\n`;
+      let text = "MINDFUL YOUTUBE JOURNAL\n=======================\n\n";
+      logs.forEach(entry => {
+        if (!entry) return;
+        const d = entry.date ? new Date(entry.date) : null;
+        const dateStr = (d && !isNaN(d)) ? d.toLocaleString('en-US', { hour12: false }) : 'Unknown Date';
+        text += `Date: ${dateStr}\n`;
+        text += `URL: ${entry.url || 'N/A'}\n`;
+        text += `Desired Outcome: ${entry.intent || 'N/A'}\n`;
+        text += `Actual Outcome: ${entry.review || 'N/A'}\n`;
+        text += `--------------------------------------------------\n\n`;
+      });
+
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `youtube_mindful_journal_${new Date().toISOString().slice(0,10)}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  // Clear Journal
+  const clearBtn = document.getElementById("clear-btn");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", function() {
+      if (confirm("Are you sure you want to delete all entries from your history?")) {
+        safeStorage.clearLogs();
+        renderLogs();
+      }
+    });
+  }
+
+  // Toggle Log Panel View
+  const logToggle = document.getElementById("log-toggle");
+  const logPanel = document.getElementById("log-panel");
+
+  if (logToggle && logPanel) {
+    logToggle.addEventListener("click", function(e) {
+      e.stopPropagation();
+      logPanel.classList.toggle("open");
     });
 
-    const bl
+    // Close Log Panel on outside click
+    document.addEventListener("click", function(e) {
+      if (!logPanel.contains(e.target) && e.target !== logToggle) {
+        logPanel.classList.remove("open");
+      }
+    });
+  }
+
+  // Smooth Resizing Logic:
+  const container = document.querySelector('.resizable-container');
+  const player = document.getElementById('player');
+
+  let isResizing = false;
+  let startX, startY, startWidth, startHeight;
+
+  document.addEventListener('mousedown', function (e) {
+    if (!e.target) return;
+
+    // Ignore drag resizing when interacting with interactive form elements
+    const isInteractive = 
+      e.target.tagName === 'INPUT' || 
+      e.target.tagName === 'TEXTAREA' || 
+      e.target.tagName === 'BUTTON' || 
+      e.target.tagName === 'A' || 
+      (e.target.closest && (
+        e.target.closest('#player') || 
+        e.target.closest('.links') ||
+        e.target.closest('#form-overlay') ||
+        e.target.closest('#log-panel') ||
+        e.target.closest('#log-toggle')
+      ));
+
+    if (isInteractive) {
+      return;
+    }
+
+    e.preventDefault();
+    isResizing = true;
+    if (player) player.style.pointerEvents = 'none'; // Smooth dragging without iframe interception
+
+    startX = e.clientX;
+    startY = e.clientY;
+    startWidth = container.offsetWidth;
+    startHeight = container.offsetHeight;
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  });
+
+  function handleMouseMove(e) {
+    if (!isResizing || !container) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    let newWidth = startWidth + dx;
+    let newHeight = startHeight + dy;
+
+    newWidth = Math.max(320, newWidth);
+    newHeight = Math.max(180, newHeight);
+
+    container.style.width = newWidth + 'px';
+    container.style.height = newHeight + 'px';
+  }
+
+  function handleMouseUp() {
+    isResizing = false;
+    if (player) player.style.pointerEvents = 'auto'; // Re-enable iframe mouse interactions
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  }
+
+  // Safe Initialize App sequence
+  try {
+    setAppState('idle');
+    renderLogs();
+  } catch (err) {
+    console.error("Initialization error:", err);
+  }
+</script>
+</body>
+</html>
