@@ -6,47 +6,65 @@
   <!-- Inline vector of white dot for ultra-minimalist favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2230%22 fill=%22%23ffffff%22/></svg>">
   <style>
-/* Background setup for the entire viewport */
+/* Reset and global layout settings */
 html, body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background-color: #333;
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  padding: 20px;
+  padding: 40px;
   box-sizing: border-box;
-  font-family: sans-serif;
   cursor: default;
-  color: white;
 }
 
+/* Styled URL Input */
 input[type="text"] {
-  background: #333;
-  border: 0.5px solid white;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
   color: white;
-  padding: 5px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  width: 360px;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
   cursor: text;
 }
 
+input[type="text"]:focus {
+  outline: none;
+  border-color: #666;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.03);
+}
+
 input[type="text"]:disabled {
-  border-color: #555;
-  color: #777;
+  border-color: #222;
+  color: #555;
+  background: #161616;
   cursor: not-allowed;
 }
 
-/* Container for player */
+/* Modernized Resizable Container */
 .resizable-container {
   position: relative;
   width: 1280px;      /* Default width */
   height: 720px;      /* Default height */
   min-width: 320px;   /* Min width */
   min-height: 180px;  /* Min height */
-  border: 1px solid #555;
+  border: 1px solid #2d2d2d;
+  border-radius: 12px;
   box-sizing: border-box;
-  overflow: hidden;   /* Prevents iframe overflow on scaling */
-  background: #252525;
+  overflow: hidden;   /* Keeps iframe and overlay within rounded borders */
+  background: #181818;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
 /* Player occupies 100% of container space */
@@ -57,29 +75,32 @@ input[type="text"]:disabled {
   border: none;
 }
 
+/* Footer links */
 .links {
   position: fixed;
-  right: 16px;
-  bottom: 12px;
+  right: 24px;
+  bottom: 18px;
 }
 
 a {
-  color: #666;
+  color: #555;
   cursor: pointer;
   text-decoration: none;
+  font-size: 13px;
+  transition: color 0.2s;
 }
 
 a:hover {
   color: #888;
 }
 
-/* Forms layout inside the container */
+/* Center Form Layout inside container */
 #form-overlay {
   display: flex;
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  background: #252525;
+  background: #181818;
 }
 
 .minimal-form {
@@ -89,121 +110,146 @@ a:hover {
   justify-content: center;
   width: 100%;
   height: 100%;
-  max-width: 600px;
+  max-width: 540px;
   margin: 0 auto;
   box-sizing: border-box;
-  padding: 20px;
+  padding: 30px;
   text-align: center;
 }
 
 .minimal-form h3 {
-  margin: 0 0 20px 0;
-  font-weight: normal;
-  font-size: 18px;
-  color: #eee;
+  margin: 0 0 16px 0;
+  font-weight: 400;
+  font-size: 20px;
+  color: #ffffff;
+  letter-spacing: -0.5px;
 }
 
 .minimal-form textarea {
   width: 100%;
-  height: 100px;
-  background: #333;
-  border: 0.5px solid white;
+  height: 110px;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
   color: white;
-  padding: 10px;
+  padding: 14px;
   box-sizing: border-box;
   resize: none;
-  font-family: sans-serif;
-  margin-bottom: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .minimal-form textarea:focus {
   outline: none;
-  border-color: #aaa;
+  border-color: #666;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.03);
 }
 
 .minimal-form .counter {
   align-self: flex-end;
   font-size: 11px;
-  color: #777;
-  margin-bottom: 15px;
+  color: #555;
+  margin-bottom: 20px;
 }
 
+/* Soft modern button */
 .minimal-btn {
-  background: transparent;
-  border: 0.5px solid white;
-  color: white;
-  padding: 6px 16px;
+  background: #ffffff;
+  border: none;
+  border-radius: 6px;
+  color: #121212;
+  padding: 10px 24px;
   cursor: pointer;
-  font-family: sans-serif;
+  font-family: inherit;
   font-size: 13px;
-  transition: all 0.2s;
+  font-weight: 500;
+  transition: background 0.2s, opacity 0.2s;
 }
 
 .minimal-btn:hover:not(:disabled) {
-  background: white;
-  color: #333;
+  background: #e5e5e5;
 }
 
 .minimal-btn:disabled {
-  border-color: #555;
+  background: #252525;
   color: #555;
   cursor: not-allowed;
 }
 
-/* Log Toggle Point */
+/* Inconspicuous Log Toggle Point */
 #log-toggle {
   position: fixed;
-  top: 15px;
-  right: 20px;
-  color: #555;
+  top: 20px;
+  right: 24px;
+  color: #444;
   text-decoration: none;
-  font-size: 24px;
+  font-size: 26px;
   cursor: pointer;
   user-select: none;
   z-index: 1001;
+  transition: color 0.2s;
 }
 
 #log-toggle:hover {
   color: #888;
 }
 
-/* Log Panel Layout */
+/* Modern Sleek Journal Panel */
 #log-panel {
   position: fixed;
   top: 0;
   right: -400px;
   width: 400px;
   height: 100vh;
-  background: #222;
-  border-left: 1px solid #444;
+  background: #161616;
+  border-left: 1px solid #252525;
   box-sizing: border-box;
-  padding: 40px 20px 20px 20px;
-  transition: right 0.3s ease;
+  padding: 50px 24px 24px 24px;
+  transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 1000;
   overflow-y: auto;
-  color: #ccc;
+  color: #999;
   font-family: monospace;
-  font-size: 13px;
-  visibility: hidden; /* Prevents clicks on hidden panel */
+  font-size: 12px;
+  visibility: hidden;
 }
 
 #log-panel.open {
   right: 0;
-  visibility: visible; /* Allows interaction only when open */
+  visibility: visible;
 }
 
 #log-panel h2 {
   margin-top: 0;
   font-weight: normal;
-  font-size: 16px;
-  letter-spacing: 1px;
-  border-bottom: 1px solid #444;
-  padding-bottom: 10px;
+  font-size: 14px;
+  color: #ffffff;
+  letter-spacing: 1.5px;
+  border-bottom: 1px solid #252525;
+  padding-bottom: 12px;
+}
+
+/* Modern scrollbar for Journal */
+#log-panel::-webkit-scrollbar {
+  width: 5px;
+}
+#log-panel::-webkit-scrollbar-track {
+  background: #161616;
+}
+#log-panel::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border-radius: 3px;
+}
+#log-panel::-webkit-scrollbar-thumb:hover {
+  background: #3a3a3a;
 }
 
 .log-entry {
-  border-bottom: 1px dashed #444;
-  padding: 15px 0;
+  border-bottom: 1px solid #222;
+  padding: 16px 0;
 }
 
 .log-entry:last-child {
@@ -211,33 +257,34 @@ a:hover {
 }
 
 .log-entry-date {
-  color: #666;
-  font-size: 11px;
-  margin-bottom: 5px;
+  color: #555;
+  font-size: 10px;
+  margin-bottom: 6px;
 }
 
 .log-entry-url a {
-  color: #555;
+  color: #444;
   word-break: break-all;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .log-entry-url a:hover {
-  color: #888;
+  color: #777;
 }
 
 .log-entry-q {
-  color: #888;
-  margin-top: 5px;
+  color: #666;
+  margin-top: 8px;
   font-weight: bold;
 }
 
 .log-entry-a {
   color: #bbb;
-  margin-bottom: 5px;
-  padding-left: 8px;
-  border-left: 1px solid #444;
+  margin-bottom: 4px;
+  padding-left: 10px;
+  border-left: 1px solid #333;
   white-space: pre-wrap;
+  line-height: 1.4;
 }
 
 .log-panel-actions {
@@ -248,16 +295,20 @@ a:hover {
 
 .log-panel-actions button {
   background: transparent;
-  border: 0.5px solid #555;
-  color: #777;
-  font-size: 11px;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  color: #666;
+  font-size: 10px;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 6px 10px;
+  font-family: inherit;
+  transition: all 0.2s;
 }
 
 .log-panel-actions button:hover {
-  border-color: #888;
+  border-color: #444;
   color: #aaa;
+  background: #1c1c1c;
 }
 
 </style>
@@ -276,7 +327,6 @@ a:hover {
 </div>
 
 <input type="text" id="url" size="40" placeholder="Insert YouTube link here">
-<button id="finish-btn" class="minimal-btn" style="display: none; margin-left: 10px; padding: 4px 10px; font-size: 12px;">Finish & Reflect</button>
 <br><br>
 
 <!-- Container for video/forms -->
@@ -294,16 +344,18 @@ a:hover {
 </div>
 
 <script>
-  // Minimum characters required for inputs to reduce thoughtless browsing
+  // Minimum characters required for inputs
   const MIN_CHARS = 50;
 
   // State Management Variables
   let currentUrl = '';
   let currentVideoId = '';
   let currentIntent = '';
+  let nextUrl = '';
+  let nextVideoId = '';
   let appState = 'idle'; // 'idle' | 'intent' | 'playing' | 'review'
 
-  // Safe wrapper for localStorage to prevent security exceptions in private modes
+  // Safe wrapper for localStorage
   const safeStorage = {
     getLogs() {
       try {
@@ -311,7 +363,7 @@ a:hover {
         const parsed = JSON.parse(data || '[]');
         return Array.isArray(parsed) ? parsed : [];
       } catch (e) {
-        console.warn("Storage access restricted. History will not be saved permanently.");
+        console.warn("Storage access restricted.");
         return [];
       }
     },
@@ -350,32 +402,29 @@ a:hover {
   function setAppState(state) {
     appState = state;
     const urlInput = document.getElementById("url");
-    const finishBtn = document.getElementById("finish-btn");
     const player = document.getElementById("player");
     const overlay = document.getElementById("form-overlay");
 
-    if (!urlInput || !finishBtn || !player || !overlay) return;
+    if (!urlInput || !player || !overlay) return;
 
     if (state === 'idle') {
       urlInput.disabled = false;
       urlInput.value = '';
-      finishBtn.style.display = 'none';
       player.style.display = 'none';
       player.src = '';
       overlay.style.display = 'flex';
-      overlay.innerHTML = `<div style="margin: auto; color: #555;">Paste a YouTube link above to begin.</div>`;
+      overlay.innerHTML = `<div style="margin: auto; color: #444; font-size: 15px; letter-spacing: 0.5px;">Paste a YouTube link above to begin.</div>`;
     } 
     
     else if (state === 'intent') {
-      urlInput.disabled = true;
-      finishBtn.style.display = 'none';
+      urlInput.disabled = false; // Keep editable to let user cancel or change
       player.style.display = 'none';
       overlay.style.display = 'flex';
       
       overlay.innerHTML = `
         <div class="minimal-form">
           <h3>What outcome do you want to get?</h3>
-          <textarea id="intent-text" placeholder="Write down your learning goal or why you want to watch this..."></textarea>
+          <textarea id="intent-text" placeholder="Explain your target results or what you seek to learn..."></textarea>
           <div class="counter" id="intent-counter">0 / ${MIN_CHARS} characters</div>
           <button id="intent-submit" class="minimal-btn" disabled>Proceed</button>
         </div>
@@ -404,12 +453,11 @@ a:hover {
       overlay.style.display = 'none';
       player.style.display = 'block';
       player.src = "https://www.youtube.com/embed/" + currentVideoId + "?autoplay=1";
-      finishBtn.style.display = 'inline-block';
     } 
     
     else if (state === 'review') {
-      urlInput.disabled = true;
-      finishBtn.style.display = 'none';
+      urlInput.disabled = true; // Lock input specifically during reflection
+      urlInput.value = '';
       player.style.display = 'none';
       player.src = '';
       overlay.style.display = 'flex';
@@ -417,7 +465,7 @@ a:hover {
       overlay.innerHTML = `
         <div class="minimal-form">
           <h3>What outcome did you get?</h3>
-          <textarea id="review-text" placeholder="Summarize what you learned or what you got from this video..."></textarea>
+          <textarea id="review-text" placeholder="Describe the actual outcome or what you learned from watching..."></textarea>
           <div class="counter" id="review-counter">0 / ${MIN_CHARS} characters</div>
           <button id="review-submit" class="minimal-btn" disabled>Save & Unlock</button>
         </div>
@@ -437,36 +485,60 @@ a:hover {
 
         btn.addEventListener("click", function() {
           saveLog(currentUrl, currentIntent, tx.value.trim());
-          setAppState('idle');
+          
+          if (nextUrl && nextVideoId) {
+            // Move to the next queued video
+            currentUrl = nextUrl;
+            currentVideoId = nextVideoId;
+            nextUrl = '';
+            nextVideoId = '';
+            urlInput.value = currentUrl;
+            setAppState('intent');
+          } else {
+            setAppState('idle');
+          }
         });
       }
     }
   }
 
-  // Handle URL Paste/Input safely with multiple events
+  // Handle URL changes / Erasing to trigger state machine
   const urlEl = document.getElementById("url");
   if (urlEl) {
     const handleUrlInput = function() {
-      const url = urlEl.value.trim();
-      const videoId = extractVideoId(url);
+      const val = urlEl.value.trim();
 
-      if (videoId) {
-        currentUrl = url;
+      if (val === '') {
+        if (appState === 'playing') {
+          // Erasing link triggers Review
+          setAppState('review');
+        } else if (appState === 'intent') {
+          // Erasing during intent returns to idle
+          setAppState('idle');
+        }
+        return;
+      }
+
+      const videoId = extractVideoId(val);
+      if (!videoId) return;
+
+      if (appState === 'idle' || appState === 'intent') {
+        currentUrl = val;
         currentVideoId = videoId;
         setAppState('intent');
+      } 
+      else if (appState === 'playing') {
+        if (videoId !== currentVideoId) {
+          // Pasting a new video queues it and triggers review for the current one
+          nextUrl = val;
+          nextVideoId = videoId;
+          setAppState('review');
+        }
       }
     };
 
     ['input', 'change'].forEach(evt => {
       urlEl.addEventListener(evt, handleUrlInput);
-    });
-  }
-
-  // Handle Finish Button click
-  const finishBtnEl = document.getElementById("finish-btn");
-  if (finishBtnEl) {
-    finishBtnEl.addEventListener("click", function() {
-      setAppState('review');
     });
   }
 
@@ -484,14 +556,14 @@ a:hover {
     renderLogs();
   }
 
-  // Deeply fault-tolerant Log Rendering (cannot crash on incomplete/corrupted entries)
+  // Log Rendering
   function renderLogs() {
     const logs = safeStorage.getLogs();
     const listContainer = document.getElementById('log-list');
     if (!listContainer) return;
     
     if (logs.length === 0) {
-      listContainer.innerHTML = '<div style="color:#555; text-align:center; margin-top:40px;">Your journal is empty.</div>';
+      listContainer.innerHTML = '<div style="color:#444; text-align:center; margin-top:40px;">Your journal is empty.</div>';
       return;
     }
 
@@ -587,7 +659,7 @@ a:hover {
   document.addEventListener('mousedown', function (e) {
     if (!e.target) return;
 
-    // Ignore drag resizing when interacting with interactive form elements
+    // Original resizing: allow drag-to-resize anywhere EXCEPT on explicit interactive elements
     const isInteractive = 
       e.target.tagName === 'INPUT' || 
       e.target.tagName === 'TEXTAREA' || 
@@ -596,7 +668,6 @@ a:hover {
       (e.target.closest && (
         e.target.closest('#player') || 
         e.target.closest('.links') ||
-        e.target.closest('#form-overlay') ||
         e.target.closest('#log-panel') ||
         e.target.closest('#log-toggle')
       ));
