@@ -101,6 +101,7 @@ a:hover {
   height: 100%;
   box-sizing: border-box;
   background: #181818;
+  overflow-y: auto;
 }
 
 .minimal-form {
@@ -118,16 +119,16 @@ a:hover {
 }
 
 .minimal-form h3 {
-  margin: 0 0 16px 0;
+  margin: 0 0 10px 0;
   font-weight: 400;
-  font-size: 20px;
+  font-size: 18px;
   color: #ffffff;
   letter-spacing: -0.5px;
 }
 
 .minimal-form textarea {
   width: 100%;
-  height: 110px;
+  height: 80px; /* Reduced slightly to fit two boxes comfortably */
   background: #1e1e1e;
   border: 1px solid #333;
   border-radius: 8px;
@@ -136,9 +137,9 @@ a:hover {
   box-sizing: border-box;
   resize: none;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -167,6 +168,7 @@ a:hover {
   font-size: 13px;
   font-weight: 500;
   transition: background 0.2s, opacity 0.2s;
+  margin-top: 10px;
 }
 
 .minimal-btn:hover:not(:disabled) {
@@ -274,7 +276,7 @@ a:hover {
 
 .log-entry-q {
   color: #666;
-  margin-top: 8px;
+  margin-top: 10px;
   font-weight: bold;
 }
 
@@ -350,7 +352,11 @@ a:hover {
   // State Management Variables
   let currentUrl = '';
   let currentVideoId = '';
-  let currentIntent = '';
+  
+  // New variables for two questions
+  let currentIntentResult = '';
+  let currentIntentReason = '';
+  
   let nextUrl = '';
   let nextVideoId = '';
   let appState = 'idle'; // 'idle' | 'intent' | 'playing' | 'review'
@@ -421,29 +427,46 @@ a:hover {
       player.style.display = 'none';
       overlay.style.display = 'flex';
       
+      // Two separate questions and textareas
       overlay.innerHTML = `
         <div class="minimal-form">
-          <h3>What outcome do you want to get?</h3>
-          <textarea id="intent-text" placeholder="Explain your target results or what you seek to learn..."></textarea>
-          <div class="counter" id="intent-counter">0 / ${MIN_CHARS} characters</div>
+          <h3>What result do you want to get out of this?</h3>
+          <textarea id="intent-result" placeholder="Explain your target results..."></textarea>
+          <div class="counter" id="result-counter">0 / ${MIN_CHARS} chars</div>
+
+          <h3 style="margin-top: 10px;">What do you need this for?</h3>
+          <textarea id="intent-reason" placeholder="Explain your motivation or reason..."></textarea>
+          <div class="counter" id="reason-counter">0 / ${MIN_CHARS} chars</div>
+
           <button id="intent-submit" class="minimal-btn" disabled>Proceed</button>
         </div>
       `;
 
-      const tx = document.getElementById("intent-text");
-      const cnt = document.getElementById("intent-counter");
+      const txResult = document.getElementById("intent-result");
+      const txReason = document.getElementById("intent-reason");
+      const cntResult = document.getElementById("result-counter");
+      const cntReason = document.getElementById("reason-counter");
       const btn = document.getElementById("intent-submit");
 
-      if (tx && cnt && btn) {
-        tx.focus();
-        tx.addEventListener("input", function() {
-          const len = tx.value.trim().length;
-          cnt.textContent = `${len} / ${MIN_CHARS} characters`;
-          btn.disabled = len < MIN_CHARS;
-        });
+      if (txResult && txReason && btn) {
+        txResult.focus();
+
+        const validateInputs = () => {
+          const lenRes = txResult.value.trim().length;
+          const lenRea = txReason.value.trim().length;
+          cntResult.textContent = `${lenRes} / ${MIN_CHARS} chars`;
+          cntReason.textContent = `${lenRea} / ${MIN_CHARS} chars`;
+          
+          // Button is disabled if ANY of the fields is below MIN_CHARS
+          btn.disabled = (lenRes < MIN_CHARS || lenRea < MIN_CHARS);
+        };
+
+        txResult.addEventListener("input", validateInputs);
+        txReason.addEventListener("input", validateInputs);
 
         btn.addEventListener("click", function() {
-          currentIntent = tx.value.trim();
+          currentIntentResult = txResult.value.trim();
+          currentIntentReason = txReason.value.trim();
           setAppState('playing');
         });
       }
@@ -465,7 +488,7 @@ a:hover {
       overlay.innerHTML = `
         <div class="minimal-form">
           <h3>What outcome did you get?</h3>
-          <textarea id="review-text" placeholder="Describe the actual outcome or what you learned from watching..."></textarea>
+          <textarea id="review-text" style="height:110px;" placeholder="Describe the actual outcome or what you learned from watching..."></textarea>
           <div class="counter" id="review-counter">0 / ${MIN_CHARS} characters</div>
           <button id="review-submit" class="minimal-btn" disabled>Save & Unlock</button>
         </div>
@@ -484,7 +507,8 @@ a:hover {
         });
 
         btn.addEventListener("click", function() {
-          saveLog(currentUrl, currentIntent, tx.value.trim());
+          // Saving both new variables instead of one
+          saveLog(currentUrl, currentIntentResult, currentIntentReason, tx.value.trim());
           
           if (nextUrl && nextVideoId) {
             // Move to the next queued video
@@ -542,13 +566,14 @@ a:hover {
     });
   }
 
-  // Log Saving Mechanism
-  function saveLog(url, intent, review) {
+  // Log Saving Mechanism updated with two intents
+  function saveLog(url, intentResult, intentReason, review) {
     const logs = safeStorage.getLogs();
     const newEntry = {
       date: new Date().toISOString(),
       url: url,
-      intent: intent,
+      intentResult: intentResult,
+      intentReason: intentReason,
       review: review
     };
     logs.push(newEntry);
@@ -556,7 +581,7 @@ a:hover {
     renderLogs();
   }
 
-  // Log Rendering
+  // Log Rendering updated for Journal formatting
   function renderLogs() {
     const logs = safeStorage.getLogs();
     const listContainer = document.getElementById('log-list');
@@ -573,16 +598,24 @@ a:hover {
       const d = entry.date ? new Date(entry.date) : null;
       const dateStr = (d && !isNaN(d)) ? d.toLocaleString('en-US', { hour12: false }) : 'Unknown Date';
       const urlStr = entry.url ? escapeHTML(entry.url) : '#';
-      const intentStr = entry.intent ? escapeHTML(entry.intent) : 'No objective entered';
+      
+      // Checking both old "intent" and new variables for backwards compatibility with old records
+      const resultStr = entry.intentResult ? escapeHTML(entry.intentResult) : (entry.intent ? escapeHTML(entry.intent) : 'No result entered');
+      const reasonStr = entry.intentReason ? escapeHTML(entry.intentReason) : 'N/A (Old record)';
       const reviewStr = entry.review ? escapeHTML(entry.review) : 'No summary entered';
 
       return `
         <div class="log-entry">
           <div class="log-entry-date">${dateStr}</div>
           <div class="log-entry-url"><a href="${urlStr}" target="_blank">${urlStr}</a></div>
-          <div class="log-entry-q">Desired outcome:</div>
-          <div class="log-entry-a">${intentStr}</div>
-          <div class="log-entry-q">Actual outcome:</div>
+          
+          <div class="log-entry-q">Q: What result do you want to get out of this?</div>
+          <div class="log-entry-a">${resultStr}</div>
+          
+          <div class="log-entry-q">Q: What do you need this for?</div>
+          <div class="log-entry-a">${reasonStr}</div>
+          
+          <div class="log-entry-q">Q: What outcome did you get?</div>
           <div class="log-entry-a">${reviewStr}</div>
         </div>
       `;
@@ -601,9 +634,11 @@ a:hover {
         if (!entry) return;
         const d = entry.date ? new Date(entry.date) : null;
         const dateStr = (d && !isNaN(d)) ? d.toLocaleString('en-US', { hour12: false }) : 'Unknown Date';
+        
         text += `Date: ${dateStr}\n`;
         text += `URL: ${entry.url || 'N/A'}\n`;
-        text += `Desired Outcome: ${entry.intent || 'N/A'}\n`;
+        text += `Desired Result: ${entry.intentResult || entry.intent || 'N/A'}\n`;
+        text += `Reason: ${entry.intentReason || 'N/A (Old record)'}\n`;
         text += `Actual Outcome: ${entry.review || 'N/A'}\n`;
         text += `--------------------------------------------------\n\n`;
       });
